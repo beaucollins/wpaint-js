@@ -1,0 +1,93 @@
+body {
+	margin:0;
+	font: 75% "Helvetica", arial, sans-serif;
+}
+.toolbar {
+	height: 40px;
+	background: #666;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.toolbar a {
+	display: inline-block;
+	background: #999;
+	padding:0 6px;
+	line-height: 28px;
+	margin: 6px;
+	margin-right: 0;
+	color: #333;
+	text-decoration: none;
+	text-shadow: 0 1px 0 hsla(255, 0%, 100%, 0.5);
+	box-shadow: 0 1px 1px hsla(255, 0%, 0%, 0.5);
+	border-radius: 2px;
+	-webkit-transition: 100ms opacity;
+	transition: 100ms opacity;
+	opacity: 0.2;
+}
+
+.toolbar.enabled a {
+	opacity: 1.0;
+}
+
+.toolbar.enabled a:hover {
+	background: #CCC;
+}
+
+.toolbar.enabled a:active {
+	background: #AAA;
+	box-shadow: inset 0 1px 0 hsla(255, 0%, 0%, 0.5);
+}
+
+.media-library {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 140px;
+	background: #333;
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space: nowrap;
+}
+
+.media-thumb {
+	display: inline-block;
+	width: 124px;
+	height: 120px;
+	background: #CCC;
+	margin: 10px;
+	margin-right: 0;
+	border: 2px solid #333;
+	border-radius: 2px;
+}
+
+.media-thumb.selected {
+	border-color: hsl(50, 100%, 50%);
+}
+
+.media-thumb img {
+	display: block;
+	margin: 0 auto;
+	max-width: 100%;
+	max-height: 100%;
+}
+
+.canvas {
+	position: absolute;
+	top: 40px;
+	left: 0;
+	right: 0;
+	bottom:140px;
+	background: #CCC;
+	cursor: default;
+	background: url(check.png) center center;
+	overflow: auto;
+}
+
+.canvas > div {
+	box-shadow: 0 0 10px hsla(0, 0%, 0%, 1);
+	position: absolute;
+}

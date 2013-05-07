@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+	<link rel="stylesheet" href="app.css" type="text/css" media="all" charset="utf-8">
+	<script type="text/javascript" src="underscore.js"></script>
+	<script type="text/javascript" src="jquery-2.0.0.js"></script>
+	<script type="text/javascript" src="backbone.js"></script>
+	<script type="text/javascript" src="xmlrpc.js"></script>
+	<script type="text/javascript" src="app.js"></script>
+	<body>
+		<div class="toolbar"><a href="#save">Save Image</a></div>
+		<div class="canvas"></div>
+		<div class="media-library"></div>
+		<script type="text/javascript" charset="utf-8">
+		this.app = (function(){
+			// create our library model
+			var app = { ui: {} },
+				library = app.library = new wpaint.model.MediaLibrary(),
+				// create a new library list view bound to div.media-library
+				list = app.ui.list = new wpaint.ui.LibraryList( {el: $( '.media-library' ), model: library} ),
+				// create a new toolbar bound to div.toolbar
+				toolbar = app.ui.toolbar = new wpaint.ui.Toolbar( {el:$( '.toolbar' )} ),
+				// create a new canvas bound to div.canvas
+				canvas = app.ui.canvas = new wpaint.ui.Canvas( {el:$( '.canvas' )} );
+
+				return app;
+
+		})();
+		</script>
+	</body>
+</html>

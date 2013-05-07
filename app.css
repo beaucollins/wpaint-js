@@ -78,7 +78,7 @@ body {
 .canvas {
 	position: absolute;
 	top: 40px;
-	left: 0;
+	left: 180px;
 	right: 0;
 	bottom:140px;
 	background: #CCC;
@@ -90,4 +90,34 @@ body {
 .canvas > div {
 	box-shadow: 0 0 10px hsla(0, 0%, 0%, 1);
 	position: absolute;
+}
+
+.layers {
+	position: absolute;
+	top: 40px;
+	left: 0;
+	width: 180px;
+	bottom: 140px;
+	background: #CCC;
+}
+
+.layers > div {
+	border-bottom: 1px solid hsla(0, 0%, 0%, 0.1);
+	border-top: 1px solid hsla(0, 0%, 100%, 0.25);
+	height: 60px;
+	position: relative;
+}
+
+.layers > div > canvas {
+	background: url(check.png) white top left;
+	position: absolute;
+	right: 5px;
+	top: 5px;
+	border: 1px solid #000s;
+}
+
+.canvas canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
 }

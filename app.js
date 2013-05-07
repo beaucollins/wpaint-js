@@ -30,19 +30,32 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			Construct the <canvas> element we'll use for drawing
 		*/
 		initialize: function(){
+			if (!this.model) this.model = new model.Layers();
+			this.layers = {};
+			this.dimensions = new Backbone.Model();
+			this.layer_panel = new ui.LayerPanel( {el:this.options.layer_panel, model:this.model } );
 			// create the <canvas> element and start it in the center of the page
-			this.$canvas = $( '<canvas></canvas>' ).css( {
+			this.$canvas = $( '<div></div>' ).css( {
 				left: Math.round( 0.5 * this.$el.width() ),
 				top: Math.round( 0.5 * this.$el.height() ),
 				visibility: 'hidden'
 			} ).appendTo( this.$el );
 			// register the the resize listener for the window
 			$( window ).on( 'resize', _.debounce( _.bind( this.resize, this ), 10 )  );
+
+			this.dimensions.on( 'change', this.resizeCanvas, this );
+			this.model.on( 'add', this.addLayer, this );
+			this.model.on( 'remove', this.removeLayer, this );
+			this.model.on( 'reset', this.resetLayers, this );
 		},
 		/*
 			Called when the window is resized to center the canvas
 		*/
 		resize: function( e ){
+			this.centerCanvas();
+		},
+		resizeCanvas: function( dimensions ){
+			this.$canvas.css( dimensions.attributes );
 			this.centerCanvas();
 		},
 		/*
@@ -65,8 +78,16 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			triggers "saved" event with the new MediaItem
 		*/
 		saveImage: function(){
+			// combine all of canvases into a single canvas
+			var composite = document.createElement( 'canvas' );
+			composite.width = this.dimensions.get( 'width' );
+			composite.height = this.dimensions.get( 'height' );
+			var context = composite.getContext( '2d' );
+			this.model.each( function( layer ){
+				context.drawImage( layer.canvas, 0, 0, composite.width, composite.height );
+			});
 			// retrive the data uri, e.g. data:image/png;base64,oi3i9030ifjsad...
-			var uri = this.$canvas[0].toDataURL(),
+			var uri = composite.toDataURL(),
 				// get the mime type (between ":" and ";")
 				type = uri.substring( uri.indexOf( ":" ) + 1 , uri.indexOf( ";" ) ),
 				// get the base64 data (eveything after the comma)
@@ -76,7 +97,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 					type: type,
 					bits: bits,
 					// add the filetype so WordPress will accept it
-					name: this.model.getTitle().replace( /\./g, '-' ) + '.png'
+					name: 'untitled.png'
 				};
 			// save the new data
 			client.newMediaItem( struct, _.bind( function( error, response ){
@@ -94,45 +115,50 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 				};
 			}, this ) );
 		},
+		loadMediaItem: function(mediaItem){
+			// detroy our current layers
+			this.model.reset();
+			var img = new Image();
+			img.onload = _.bind( function(){
+				this.$canvas.css( 'visibility', 'visible' );
+				this.dimensions.set( { width:img.width, height:img.height } );
+				this.model.add( { image:img, width:img.width, height:img.height } );
+				console.log( "Add second model");
+				this.model.add( { width:img.width, height:img.height } );
+			}, this );
+			img.src = mediaItem.getSrc();
+		},
+		addLayer: function(layer){
+			this.$canvas.append( layer.canvas );
+			this.currentLayer = layer;
+		},
+		removeLayer: function(layer){
+			$(layer.canvas).remove();
+		},
+		resetLayers: function(){
+			this.$canvas.children().remove();
+		},
 		/*
 			Set a new MediaItem for the canvas to display
 		*/
 		setModel: function( mediaItem ){
-			// set the view's model
-			this.model = mediaItem;
-			// get reference to underlying <canvas> element
-			var canvas = this.$canvas[0],
-					// the the drawing context for the canvas
-					context = this.context = canvas.getContext( '2d' );
-				
-			// create a new image to load the mediaItem's URL
-			var img = new Image();
-			// listen for img.onload and bind to View instance
-			img.onload = _.bind( function(){
-				canvas.width = img.width;
-				canvas.height = img.height;
-				context.drawImage( img, 0, 0, img.width, img.height );
-				this.$canvas.css( 'visibility', 'visible' );
-				this.centerCanvas();
-			}, this );
-			// load the img src, onload is called when the img is ready
-			img.src = mediaItem.getSrc();
+			this.loadMediaItem( mediaItem );
 		},
 		/*
 			mousedown event callback
 		*/
 		startDrawing: function( e ){
 			e.preventDefault();
-			this.context.beginPath();
-			this.context.lineWidth = 3.5;
-			this.context.strokeStyle = 'hsl( 0, 100%, 50% )';
 			this.drawing = true;
+			this.currentLayer.startDrawing();
 		},
 		/*
 			mouseup event callback
 		*/
 		stopDrawing: function(){
+			// this.drawing = false;
 			this.drawing = false;
+			this.currentLayer.stopDrawing();
 		},
 		/*
 			mousemove event callback
@@ -140,12 +166,47 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		draw: function( event ){
 			if ( this.drawing ) {
 				var offset = this.$canvas.offset();
-				this.context.lineTo( event.pageX - offset.left, event.pageY - offset.top );
-				this.context.stroke();
+				// get the top most layer
+				this.currentLayer.draw( event.pageX - offset.left, event.pageY - offset.top );
 			};
 		}
 	} );
 
+	ui.LayerPanel = Backbone.View.extend({
+		initialize: function(){
+			this.layers = {};
+			this.model.on( 'add', this.addLayer, this );
+			this.model.on( 'remove', this.removeLayer, this);
+			this.model.on( 'reset', this.resetLayers, this );
+		},
+		addLayer: function(layer){
+			// create a layer view
+			var panel = new ui.LayerView( { model:layer } );
+			this.$el.prepend( panel.el );
+		},
+		resetLayers: function(){
+			this.$el.children().remove();
+		}
+	});
+
+	ui.LayerView = Backbone.View.extend({
+		tagName: 'div',
+		initialize: function(){
+			this.$canvas = $( "<canvas></canvas>" );
+			var canvas = this.$canvas[0],
+				context = canvas.getContext( '2d' );
+				canvas.height = 50;
+				canvas.width = 50;
+			// render the models canvas representation into ours
+			context.drawImage( this.model.canvas, 0, 0, 50, 50 );
+			this.$el.append( this.$canvas );
+			this.model.on( 'draw', function( canvas ){
+				console.log( "Update thumb!" );
+				context.clearRect( 0, 0, 50, 50 );
+				context.drawImage( canvas, 0, 0, 50, 50 );
+			})
+		}
+	});
 	/*
 		View for managing the toolbar (div.toolbar). Currently only a single button.
 	*/
@@ -228,6 +289,34 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		select: function(){
 			this.model.set( {'selected': true} );
 		}
+	} );
+
+	model.Layer = Backbone.Model.extend( {
+		initialize: function(){
+			var canvas = this.canvas = document.createElement( 'canvas' ),
+					context = this.context = this.canvas.getContext( '2d' );
+			canvas.width = this.get( 'width' );
+			canvas.height = this.get( 'height' );
+			if ( this.has( 'image' ) ) {
+				context.drawImage( this.get('image'), 0, 0, canvas.width, canvas.height )
+			};
+		},
+		startDrawing: function(){
+			this.context.beginPath();
+			this.context.lineWidth = 3.5;
+			this.context.strokeStyle = 'hsl( 0, 100%, 50% )';
+		},
+		stopDrawing: function(){
+			this.trigger( 'draw', this.canvas );
+		},
+		draw: function(x, y){
+			this.context.lineTo(x, y);
+			this.context.stroke();
+		}
+	} );
+
+	model.Layers = Backbone.Collection.extend( {
+		model: model.Layer
 	} );
 
 	// TODO: Media Item model to represent a WP Media Item that syncs over XML-RPC

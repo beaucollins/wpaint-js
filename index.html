@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+	<title>WPaint</title>
 	<link rel="stylesheet" href="app.css" type="text/css" media="all" charset="utf-8">
 	<script type="text/javascript" src="underscore.js"></script>
 	<script type="text/javascript" src="jquery-2.0.0.js"></script>
@@ -9,6 +10,7 @@
 	<body>
 		<div class="toolbar"><a href="#save">Save Image</a></div>
 		<div class="canvas"></div>
+		<div class="layers"></div>
 		<div class="media-library"></div>
 		<script type="text/javascript" charset="utf-8">
 		this.app = (function(){
@@ -20,7 +22,7 @@
 				// create a new toolbar bound to div.toolbar
 				toolbar = app.ui.toolbar = new wpaint.ui.Toolbar( {el:$( '.toolbar' )} ),
 				// create a new canvas bound to div.canvas
-				canvas = app.ui.canvas = new wpaint.ui.Canvas( {el:$( '.canvas' )} );
+				canvas = app.ui.canvas = new wpaint.ui.Canvas( {el:$( '.canvas' ), layer_panel: '.layers'} );
 
 			// when the selection changes on item_list, update the canvas' model
 			list.on( 'selected', canvas.setModel, canvas );

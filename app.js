@@ -182,7 +182,17 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		className: 'media-library',
 		initialize: function(){
 			this.model.on( 'add', this.addItem, this );
+			this.model.on( 'change:selected', this.selectItem, this );
 			this.model.fetch();
+		},
+		selectItem: function( model, selected ){
+			if ( selected ) {
+				if ( this.selection ) {
+					this.selection.set( {selected: false} );
+				}
+				this.selection = model;
+				this.trigger( 'selected', model );
+			}
 		},
 		// TODO: Excercise 2
 		// create a new ui.LibraryThumb for the added item and add it to the DOM
@@ -199,6 +209,9 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 	// set up a click event and and have it set the model as selected
 	ui.LibraryThumb = Backbone.View.extend( {
 		className: 'media-thumb',
+		events: {
+			'click': 'select'
+		},
 		initialize: function(){
 			this.$img = $( '<img />' ).appendTo( this.$el );
 			// listen for the model change
@@ -211,6 +224,9 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		render: function(){
 			this.$img.attr( 'src', this.model.getThumbnailSrc() );
 			this.$el.toggleClass( 'selected', this.model.get( 'selected' ) === true );
+		},
+		select: function(){
+			this.model.set( {'selected': true} );
 		}
 	} );
 
@@ -273,7 +289,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			}
 		}
 	} );
-
+	
 	// default parameters to use for XML-RPC calls
 	app.api.DEFAULT_PARAMS = [blog_id, username, password];
 

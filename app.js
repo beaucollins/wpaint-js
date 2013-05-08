@@ -47,6 +47,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			this.model.on( 'add', this.addLayer, this );
 			this.model.on( 'remove', this.removeLayer, this );
 			this.model.on( 'reset', this.resetLayers, this );
+			this.model.on( 'change:selected', this.selectLayer, this );
 		},
 		/*
 			Called when the window is resized to center the canvas
@@ -123,20 +124,28 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 				this.$canvas.css( 'visibility', 'visible' );
 				this.dimensions.set( { width:img.width, height:img.height } );
 				this.model.add( { image:img, width:img.width, height:img.height } );
-				console.log( "Add second model");
 				this.model.add( { width:img.width, height:img.height } );
 			}, this );
 			img.src = mediaItem.getSrc();
 		},
+		newLayer: function(){
+			this.model.add( this.dimensions.attributes );
+		},
 		addLayer: function(layer){
 			this.$canvas.append( layer.canvas );
-			this.currentLayer = layer;
+			layer.set( { selected: true } );
 		},
-		removeLayer: function(layer){
+		removeLayer: function( layer){
 			$(layer.canvas).remove();
 		},
-		resetLayers: function(){
+		resetLayers: function( ){
 			this.$canvas.children().remove();
+		},
+		selectLayer: function( layer, selected ){
+			if ( selected ) {
+				if ( this.selectedLayer ) this.selectedLayer.set( { selected: false } );
+				this.selectedLayer = layer;
+			};
 		},
 		/*
 			Set a new MediaItem for the canvas to display
@@ -150,7 +159,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		startDrawing: function( e ){
 			e.preventDefault();
 			this.drawing = true;
-			this.currentLayer.startDrawing();
+			this.selectedLayer.startDrawing();
 		},
 		/*
 			mouseup event callback
@@ -158,7 +167,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		stopDrawing: function(){
 			// this.drawing = false;
 			this.drawing = false;
-			this.currentLayer.stopDrawing();
+			this.selectedLayer.stopDrawing();
 		},
 		/*
 			mousemove event callback
@@ -167,7 +176,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			if ( this.drawing ) {
 				var offset = this.$canvas.offset();
 				// get the top most layer
-				this.currentLayer.draw( event.pageX - offset.left, event.pageY - offset.top );
+				this.selectedLayer.draw( event.pageX - offset.left, event.pageY - offset.top );
 			};
 		}
 	} );
@@ -179,20 +188,36 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			this.model.on( 'remove', this.removeLayer, this);
 			this.model.on( 'reset', this.resetLayers, this );
 		},
-		addLayer: function(layer){
+		removeLayer: function( layer ){
+			this.layers[layer.cid].$el.remove();
+			delete this.layers[layer.cid];
+		},
+		addLayer: function( layer ){
 			// create a layer view
 			var panel = new ui.LayerView( { model:layer } );
 			this.$el.prepend( panel.el );
+			this.layers[layer.cid] = panel;
 		},
 		resetLayers: function(){
 			this.$el.children().remove();
+			this.layers = {};
 		}
 	});
 
 	ui.LayerView = Backbone.View.extend({
 		tagName: 'div',
+		events: {
+			'click' : 'selectLayer'
+		},
 		initialize: function(){
+			var model = this.model;
+			this.model.on( 'change', this.render, this );
 			this.$canvas = $( "<canvas></canvas>" );
+			this.$deleteButton = $( "<a href='#delete'>Delete</a>" ).on( 'click', function( e ){
+				e.preventDefault();
+				e.stopPropagation();
+				model.destroy();
+			} ).appendTo( this.$el );
 			var canvas = this.$canvas[0],
 				context = canvas.getContext( '2d' );
 				canvas.height = 50;
@@ -201,10 +226,16 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			context.drawImage( this.model.canvas, 0, 0, 50, 50 );
 			this.$el.append( this.$canvas );
 			this.model.on( 'draw', function( canvas ){
-				console.log( "Update thumb!" );
 				context.clearRect( 0, 0, 50, 50 );
 				context.drawImage( canvas, 0, 0, 50, 50 );
 			})
+		},
+		selectLayer: function( e ){
+			e.preventDefault();
+			this.model.set( { selected: true } );
+		},
+		render: function(){
+			this.$el.toggleClass( 'selected', !!this.model.get( 'selected' ) );
 		}
 	});
 	/*
@@ -212,7 +243,8 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 	*/
 	ui.Toolbar = Backbone.View.extend( {
 		events: {
-			'click a[href="#save"]': 'saveImage'
+			'click a[href="#save"]': 'saveImage',
+			'click a[href="#add-layer"]' : 'addLayer',
 		},
 		initialize: function(){
 			this.render();
@@ -224,6 +256,10 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		saveImage: function( e ){
 			e.preventDefault();
 			this.trigger( 'save' );
+		},
+		addLayer: function( e ){
+			e.preventDefault();
+			this.trigger( 'add-layer' );
 		},
 		/*
 			Toolbar is only enabled if it has a model

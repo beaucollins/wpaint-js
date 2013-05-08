@@ -57,7 +57,7 @@ body {
 	display: inline-block;
 	width: 124px;
 	height: 120px;
-	background: #CCC;
+	background: url(check.png) #FFF;
 	margin: 10px;
 	margin-right: 0;
 	border: 2px solid #333;
@@ -83,7 +83,7 @@ body {
 	bottom:140px;
 	background: #CCC;
 	cursor: default;
-	background: url(check.png) center center;
+	background: url(check.png) #EEE center center;
 	overflow: auto;
 }
 
@@ -99,6 +99,7 @@ body {
 	width: 180px;
 	bottom: 140px;
 	background: #CCC;
+	box-shadow: 0 0 5px hsla(0, 0%, 0%, 0.25);
 }
 
 .layers > div {
@@ -108,10 +109,14 @@ body {
 	position: relative;
 }
 
+.layers > div.selected {
+	background: #DDD;
+}
+
 .layers > div > canvas {
 	background: url(check.png) white top left;
 	position: absolute;
-	right: 5px;
+	left: 5px;
 	top: 5px;
 	border: 1px solid #000s;
 }
@@ -120,4 +125,37 @@ body {
 	position: absolute;
 	top: 0;
 	left: 0;
+}
+
+.layers a[href="#delete"] {
+	text-decoration: none;
+	position: absolute;
+	height: 26px;
+	width: 26px;
+	border-radius: 100%;
+	text-indent: 100%;
+	background: #999;
+	top: 28px;
+	right: 5px;
+	-webkit-transform: translate(0, -13px);
+	-moz-transform: translate(0, -13px);
+	opacity: 0.5;
+	color: #FFF;
+}
+
+.layers a[href="#delete"]:hover {
+	background: #C00;
+}
+
+
+.layers a[href="#delete"]::before {
+	content: "×";
+	position: absolute;
+	top: 3px;
+	left: -18px;
+	font-size: 16px;
+}
+
+.layers > div:hover a {
+	opacity: 1;
 }

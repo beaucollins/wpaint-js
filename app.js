@@ -21,10 +21,13 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 	// View for mainting the drawing canvas
 	ui.Canvas = Backbone.View.extend( {
 		events: {
-			'mousedown': 'startDrawing',
-			'mouseup': 'stopDrawing',
-			'mousemove': 'draw',
-			'resize': 'resize'
+			'mousedown' : 'startDrawing',
+			'mouseup'   : 'stopDrawing',
+			'mousemove' : 'draw',
+			'resize'    : 'resize',
+			'touchstart': 'startDrawing',
+			'touchstop' : 'stopDrawing',
+			'touchmove' : 'touchDraw'
 		},
 		/*
 			Construct the <canvas> element we'll use for drawing
@@ -257,7 +260,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 	*/
 	ui.Toolbar = Backbone.View.extend( {
 		events: {
-			'click a[href="#save"]': 'saveImage',
+			'click a[href="#save"]'      : 'saveImage',
 			'click a[href="#add-layer"]' : 'addLayer',
 		},
 		initialize: function(){

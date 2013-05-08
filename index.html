@@ -21,8 +21,14 @@
 				toolbar = app.ui.toolbar = new wpaint.ui.Toolbar( {el:$( '.toolbar' )} ),
 				// create a new canvas bound to div.canvas
 				canvas = app.ui.canvas = new wpaint.ui.Canvas( {el:$( '.canvas' )} );
+				
+			// TODO: Exercise 3
+			// - when the selection changes on item_list, update the canvas' model
+			// - when the selection changes on item_list, update the toolbar's model
+			// - when the toolbar save button is pressed, canvas should save the image
+			// - when the canvas has created a new attachment, update the library
 
-				return app;
+			return app;
 
 		})();
 		</script>

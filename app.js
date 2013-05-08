@@ -181,11 +181,17 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 	ui.LibraryList = Backbone.View.extend( {
 		className: 'media-library',
 		initialize: function(){
+			this.model.on( 'add', this.addItem, this );
 			this.model.fetch();
 		},
 		// TODO: Excercise 2
 		// create a new ui.LibraryThumb for the added item and add it to the DOM
 		addItem: function( item, library, options ){
+			var thumb = new ui.LibraryThumb( {model: item} ),
+				index = library.indexOf( item );
+			// if the index is 0, we prepend, otherwise append since new items
+			// are added to the front of the list
+			this.$el[index == 0 ? 'prepend' : 'append']( thumb.$el );
 		}
 	} );
 
@@ -203,6 +209,8 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 		// set the img's src with the model's src toggle the "selected" class
 		// if the model is selected
 		render: function(){
+			this.$img.attr( 'src', this.model.getThumbnailSrc() );
+			this.$el.toggleClass( 'selected', this.model.get( 'selected' ) === true );
 		}
 	} );
 

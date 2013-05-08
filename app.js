@@ -48,6 +48,8 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			this.model.on( 'remove', this.removeLayer, this );
 			this.model.on( 'reset', this.resetLayers, this );
 			this.model.on( 'change:selected', this.selectLayer, this );
+
+			this.touchEnabled = document.createElement( 'body' ).ontouchstart === null;
 		},
 		/*
 			Called when the window is resized to center the canvas
@@ -157,6 +159,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			mousedown event callback
 		*/
 		startDrawing: function( e ){
+			if ( !this.selectedLayer ) return;
 			e.preventDefault();
 			this.drawing = true;
 			this.selectedLayer.startDrawing();
@@ -165,6 +168,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			mouseup event callback
 		*/
 		stopDrawing: function(){
+			if ( !this.selectedLayer ) return;
 			// this.drawing = false;
 			this.drawing = false;
 			this.selectedLayer.stopDrawing();
@@ -173,11 +177,21 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			mousemove event callback
 		*/
 		draw: function( event ){
-			if ( this.drawing ) {
+			if ( !this.selectedLayer ) return;
+			if ( this.drawing && !this.touchEnabled ) {
 				var offset = this.$canvas.offset();
 				// get the top most layer
 				this.selectedLayer.draw( event.pageX - offset.left, event.pageY - offset.top );
 			};
+		},
+		touchDraw: function( event ){
+			if ( !this.selectedLayer ) return;
+			var offset = this.$canvas.offset();
+			event.preventDefault();
+			event = event.originalEvent;
+			// get the top most layer
+			this.selectedLayer.draw( event.pageX - offset.left, event.pageY - offset.top );
+			console.log( "Moved", event );
 		}
 	} );
 

@@ -227,7 +227,7 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 			var model = this.model;
 			this.model.on( 'change', this.render, this );
 			this.$canvas = $( "<canvas></canvas>" );
-			this.$deleteButton = $( "<a href='#delete'>Delete</a>" ).on( 'click', function( e ){
+			this.$deleteButton = $( "<a title='Delete' href='#delete'></a>" ).on( 'click', function( e ){
 				e.preventDefault();
 				e.stopPropagation();
 				model.destroy();

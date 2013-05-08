@@ -100,6 +100,8 @@ body {
 	bottom: 140px;
 	background: #CCC;
 	box-shadow: 0 0 5px hsla(0, 0%, 0%, 0.25);
+	overflow-x: none;
+	overflow-y: auto;
 }
 
 .layers > div {
@@ -133,7 +135,6 @@ body {
 	height: 26px;
 	width: 26px;
 	border-radius: 100%;
-	text-indent: 100%;
 	background: #999;
 	top: 28px;
 	right: 5px;
@@ -151,9 +152,9 @@ body {
 .layers a[href="#delete"]::before {
 	content: "×";
 	position: absolute;
-	top: 3px;
-	left: -18px;
-	font-size: 16px;
+	top: 1px;
+	left: 7px;
+	font-size: 18px;
 }
 
 .layers > div:hover a {

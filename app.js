@@ -208,6 +208,36 @@ var wpaint = ( function( endpoint, blog_id, username, password ){
 
 	// TODO: Media Item model to represent a WP Media Item that syncs over XML-RPC
 	// and is managed by the MediaLibrary collection
+	model.MediaItem = Backbone.Model.extend( {
+		// Tell the Model that the unique for this model is stored in the attachment_id property
+		idAttribute: 'attachment_id',
+		// Sync the item of XML-RPC
+		getDateCreated: function( a, b ){
+			return Date.parse( this.get( 'date_created_gmt' ) );
+		},
+		getSrc: function(){
+			return this.get( 'link' );
+		},
+		getThumbnailSrc: function(){
+			return this.get( 'thumbnail' );
+		},
+		getTitle: function(){
+			return this.get( 'title' );
+		},
+		// TODO: Excercise 3
+		// Add syncing to MediaItem for the 'read' method using client.getMediaItem
+		sync: function( method, media_item, options ){
+			switch( method ){
+				case 'read':
+				client.getMediaItem( this.id, function( error, response ){
+					if ( !error ) {
+						options.success( response );
+					};
+				} );
+				break;
+			}
+		}
+	} );
 
 	// Represents the list of media items in the media library
 	model.MediaLibrary = Backbone.Collection.extend( {
